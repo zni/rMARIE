@@ -38,6 +38,7 @@ This will produce *file.rmex*, which you can now give to the virtual machine:
 
     rmarie-vm <file>.rmex
 
+
 Examples
 --------
 
