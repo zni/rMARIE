@@ -31,10 +31,10 @@ Usage
 -----
 
 To assemble an rMARIE assembly file:
-    rmarie-asm <file>.mas
+     rmarie-asm file.mas
 
-This will produce *<file>.rmex*, which you can now give to the virtual machine:
-    rmarie-vm <file>.rmex
+This will produce *file.rmex*, which you can now give to the virtual machine:
+     rmarie-vm file.rmex
 
 Examples
 --------
