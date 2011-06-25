@@ -68,7 +68,7 @@ module Rmarie
 
         # Generate body for memory dump.
         #
-        # Passing true generates a truncated dump, while true generates a
+        # Passing false generates a truncated dump, while true generates a
         # complete memory dump.
         #
         def generate_body(v)
