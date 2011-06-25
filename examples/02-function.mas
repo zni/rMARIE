@@ -1,0 +1,20 @@
+/   Author : Matthew Godshall
+/   Date   : 2011 Jun 24
+/
+/   Simple program which makes use of a function.
+/
+        org     0x100
+        jump    start
+        hex     0xc     / Store 0xc at address 0x101.  
+start,  load    0x101   / Load 0xc into the AC.
+        store   n       / Store the AC at n.
+        jns     add3    / Jump to add3 and save the PC at that address.
+        output          / Display the result.
+        halt
+
+n,      dec     0       / Parameter for add3.
+three,  dec     3
+add3,   hex     0x0     / Storage location for our return address.
+        load    n
+        add     three
+        jumpi   add3    / Load the return address stored at add3 and jump to it.

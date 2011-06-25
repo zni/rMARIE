@@ -1,0 +1,44 @@
+/   Author : Matt Godshall
+/   Date   : 2011 Jun 24
+/
+/   A stack implementation to test the new instruction 'storei'.
+/
+
+        org     0x100       / Start at address 256 to create stack space.
+        jump    start
+        hex     0x000f      / address 0x101
+        hex     0x000a      / address 0x102
+        hex     0x0009      / address 0x103
+start,  load    0x101
+        store   e
+        jns     push        / Push 0x000f onto the stack.
+        load    0x102
+        store   e
+        jns     push        / Push 0x000a onto the stack.
+        jns     pop         / Pop 0x000a off of the stack.
+        output              / Display popped element.
+        load    0x103
+        store   e
+        jns     push        / Push 0x0009 onto the stack.
+        halt
+e,      hex     0x0         / Parameter for 'push'.
+sp,     hex     0x0         / Stack pointer.
+one,    dec     1           / Constant.
+
+
+push,   hex     0x0         / Return address.
+        load    e
+        storei  sp          / Store 'e' at the current stack pointer address.
+        load    sp
+        add     one         / Increment the stack pointer.
+        store   sp
+        jumpi   push        / Return.
+
+
+pop,    hex     0x0
+        load    sp
+        subt    one         / Decrement the stack pointer.
+        store   sp
+        clear
+        addi    sp          / Place popped element in AC.
+        jumpi   pop         / Return.

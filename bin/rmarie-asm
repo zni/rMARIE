@@ -1,0 +1,92 @@
+#!/usr/bin/env ruby
+# Copyright (c) 2011 Matthew Godshall
+#
+# This file is part of rMARIE.
+#
+# rMARIE is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# rMARIE is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with rMARIE.  If not, see <http://www.gnu.org/licenses/>.
+#
+
+require 'optparse'
+
+require 'rmarie'
+import_asm
+
+def main
+    # Set-up the option parser.
+    options = Hash.new
+    optparse = setup_optparse(options)
+
+    optparse.parse!
+
+    # If no source file is given, display the help message.
+    if ARGV.empty?
+        puts optparse
+        exit false
+    end
+
+    # Get the assembly source file and create the binary file name.
+    if ARGV[0] =~ /(.*)\.mas$/i
+        source = ARGV[0]
+
+        # Check if a file name was given for the object code file.
+        if not options[:output]
+
+            # Use captured filename minus the extension to generate the
+            # object code file name.
+            binary = $1 << ".rmex"
+        else
+            binary = options[:output]
+        end
+    else
+        STDERR.puts "Filename must have the extension '.mas', ex: foo.mas"
+        exit false
+    end
+
+    # Parse the source file to create machine instructions.
+    parser = Rmarie::Parser.new
+    instructions = parser.parse_file(source)
+
+    # Create a machine code object.
+    mcode = Rmarie::MachineCode.new parser.offset, instructions
+
+    # Dump the serialized machine to file.
+    begin
+        File.open(binary,'w') do |f|
+            Marshal.dump mcode, f
+        end
+    rescue StandardError => e
+        STDERR.puts "#{e}: #{e.message}"
+        exit false
+    end
+end
+
+# Perform OptionParser initialization.
+#
+def setup_optparse options
+    OptionParser.new do |opts|
+        opts.banner = "usage: rmarie-asm [options] file.mas"
+
+        options[:output] = nil
+        opts.on('-o','--output-file outfile','output file name [<filename>.rmex]') do |file|
+            options[:output] = file
+        end
+
+        opts.on('-h','--help','Display this screen.') do
+            puts opts
+            exit
+        end
+    end
+end
+
+main

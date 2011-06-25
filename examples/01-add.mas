@@ -1,0 +1,15 @@
+/   Author : Matthew Godshall
+/   Date   : 2011 Jun 24
+/
+/   Simple program which adds two numbers together.
+/
+
+        org     0x100   / Load code at address 0x100.
+        load    x       / Load 'x' into the AC.
+        add     y       / Add 'y' to the AC.
+        store   result  / Store AC value at 'result'.
+        halt            / Stop execution.
+
+x,      dec     2       / Place the decimal value '2' at address 0x103.
+y,      hex     0x4     / Place the hexadecimal value '0x4' at address 0x104.
+result, dec     0       / Hold the result of the addition.

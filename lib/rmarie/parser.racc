@@ -1,0 +1,254 @@
+# Copyright (c) 2011 Matthew Godshall
+#
+# This file is part of rMARIE.
+#
+# rMARIE is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# rMARIE is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with rMARIE.  If not, see <http://www.gnu.org/licenses/>.
+#
+class Rmarie::Parser
+
+rule
+
+program     : directive statements
+                {
+                    result = val[1]
+                }
+            | statements
+                {
+                    result = val[0]
+                }
+
+directive   : ORG INT
+                {
+                    @offset = val[1]
+                    @loc = @loc + @offset
+                }
+            | ORG HEX
+                {
+                    @offset = val[1]
+                    @loc = @loc + @offset
+                }
+
+statements  : statement
+                {
+                    return val
+                }
+            | declaration
+                {
+                    return val
+                }
+            | statements statement
+                {
+                    result.push val[1]
+                }
+            | statements declaration
+                {
+                    result.push val[1]
+                }
+
+statement   : LABEL ',' UNOP value
+                {
+                    @sym.insert val[0], @loc
+                    @loc = @loc.next
+                    return unop val[2], val[3]
+                }
+            | LABEL ',' OP
+                {
+                    @sym.insert val[0], @loc
+                    @loc = @loc.next
+                    return Rmarie::INS[val[2]]
+                }
+            | UNOP value
+                {
+                    @loc = @loc.next
+                    return unop val[0], val[1]
+                }
+            | OP
+                {
+                    @loc = @loc.next
+                    return Rmarie::INS[val[0]]
+                }
+
+declaration : LABEL ',' T_DEC INT
+                {
+                    @sym.insert val[0], @loc
+                    @loc = @loc.next
+                    return int val[3]
+                }
+            | LABEL ',' T_HEX HEX
+                {
+                    @sym.insert val[0], @loc
+                    @loc = @loc.next
+                    return hex val[3]
+                }
+            | T_DEC INT
+                {
+                    @loc = @loc.next
+                    return int val[1]
+                }
+            | T_HEX HEX
+                {
+                    @loc = @loc.next
+                    return hex val[1]
+                }
+
+value       : LABEL
+                {
+                    v = @sym.lookup val[0]
+
+                    if v.nil?
+                        return val[0]
+                    else
+                        v
+                    end
+                }
+            | address
+                {
+                    return val[0]
+                }
+
+address     : INT
+                {
+                    if (val[0] >= 0) and (val[0] <= 4095)
+                        return val[0]
+                    else
+                        raise ParseError,
+                            "Address must be between 0 and 4095."
+                    end
+                }
+            | HEX
+                {
+                    if (val[0] >= 0x0) and (val[0] <= 0xFFF)
+                        return val[0]
+                    else
+                        raise ParseError,
+                            "Address must be between 0x0 and 0xFFF."
+                    end
+                }
+end
+
+
+---- header
+require 'rmarie/lexer.rex'
+require 'rmarie/machinecode'
+require 'rmarie/symboltable'
+require 'rmarie/uint16'
+
+---- inner
+# Lex and parse the given file.
+#
+def parse_file file
+
+    # Initialize the lexer and parser.
+    lexer = Lexer.new
+    parser = Parser.new
+    tokens = Array.new
+
+    # Scan the assembly source file.
+    begin
+        File.new(file).each_line do |line|
+            lexer.scan_setup(line)
+            while token = lexer.next_token
+                tokens.push token
+            end
+        end
+    rescue StandardError => e
+        STDERR.puts #{e.message}
+        exit false
+    end
+
+    backpatch (parse tokens)
+end
+
+
+# User defined 'parse' function for racc.
+#
+def parse tokens
+    @loc = 0
+    @sym = SymbolTable.new
+    @offset = 0
+    @tokens = tokens
+
+    @tokens.push [false, false]
+    do_parse
+end
+
+
+# User defined 'next_token' function for racc.
+#
+def next_token
+    @tokens.shift
+end
+
+
+# User defined 'on_error' function for racc.
+# TODO Add actual error handling.    
+#
+def on_error error_token, error_value, stack
+    STDERR.puts token_to_str error_token
+    STDERR.puts "error value: #{error_value}"
+    STDERR.puts "current stack: #{stack}"
+end
+
+
+# Process an array of machine code, replacing symbol names with their locations
+# from the symbol table.
+#
+def backpatch lst
+    lst.map do |x|
+        code, str = x
+        if str.nil?
+            code
+        else
+            addr = @sym.lookup str
+            if addr.nil?
+                abort "Label #{str} never declared."
+            else
+                code | addr
+            end
+        end
+    end
+end
+
+# Process a unary operator.
+#
+def unop op, v
+    if v.is_a? Integer
+        return Rmarie::INS[op] | v
+    else
+        return [Rmarie::INS[op], v]
+    end
+end
+
+# Process an decimal value.
+#
+def int v
+    if (v > 32767) or (v < -32768)
+        raise ParseError,
+            "Decimal value must be between -32768 and 32767."
+    else
+        return (UInt16.from_signed v)
+    end
+end
+
+# Process a hexadecimal value.
+def hex v
+    if (v >= 0x0) and (v <= 0xFFFF)
+        return v
+    else
+        raise ParseError,
+            "Hex value must be between 0x0 and 0xFFFF."
+    end
+end
+
+attr_reader :loc, :sym, :offset
