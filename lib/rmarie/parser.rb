@@ -14,7 +14,7 @@ require 'rmarie/uint16'
 module Rmarie
   class Parser < Racc::Parser
 
-module_eval(<<'...end parser.racc/module_eval...', 'parser.racc', 148)
+module_eval(<<'...end parser.racc/module_eval...', 'parser.racc', 150)
 # Lex and parse the given file.
 #
 def parse_file file
@@ -36,8 +36,14 @@ def parse_file file
         STDERR.puts #{e.message}
         exit false
     end
+    
+    mcode = parse tokens
 
-    backpatch (parse tokens)
+    if @fail
+        abort "Assembly failed."
+    else
+        backpatch mcode
+    end
 end
 
 
@@ -48,9 +54,11 @@ def parse tokens
     @sym = SymbolTable.new
     @offset = 0
     @tokens = tokens
+    @fail = false
 
     @tokens.push [false, false]
     do_parse
+
 end
 
 
@@ -104,8 +112,9 @@ end
 #
 def int v
     if (v > 32767) or (v < -32768)
-        raise ParseError,
-            "Decimal value must be between -32768 and 32767."
+        STDERR.puts "Decimal value must be between -32768 and 32767."
+        @fail = true
+        return 0
     else
         return (UInt16.from_signed v)
     end
@@ -116,8 +125,9 @@ def hex v
     if (v >= 0x0) and (v <= 0xFFFF)
         return v
     else
-        raise ParseError,
-            "Hex value must be between 0x0 and 0xFFFF."
+        STDERR.puts "Hex value must be between 0x0 and 0xFFFF."
+        @fail = true
+        return 0
     end
 end
 
@@ -419,21 +429,23 @@ module_eval(<<'.,.,', 'parser.racc', 121)
                         if (val[0] >= 0) and (val[0] <= 4095)
                         return val[0]
                     else
-                        raise ParseError,
-                            "Address must be between 0 and 4095."
+                        STDERR.puts "Address must be between 0 and 4095."
+                        @fail = true
+                        return val[0]
                     end
                 
     result
   end
 .,.,
 
-module_eval(<<'.,.,', 'parser.racc', 130)
+module_eval(<<'.,.,', 'parser.racc', 131)
   def _reduce_20(val, _values, result)
                         if (val[0] >= 0x0) and (val[0] <= 0xFFF)
                         return val[0]
                     else
-                        raise ParseError,
-                            "Address must be between 0x0 and 0xFFF."
+                        STDERR.puts "Address must be between 0x0 and 0xFFF."
+                        @fail = true
+                        return val[0]
                     end
                 
     result

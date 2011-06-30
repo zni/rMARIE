@@ -36,7 +36,7 @@ def main
     end
 
     # Get the assembly source file and create the binary file name.
-    if ARGV[0] =~ /(.*)\.mas$/i
+    if ARGV[0] =~ /(.*)\.rmas$/i
         source = ARGV[0]
 
         # Check if a file name was given for the object code file.
@@ -49,7 +49,7 @@ def main
             binary = options[:output]
         end
     else
-        STDERR.puts "Filename must have the extension '.mas', ex: foo.mas"
+        STDERR.puts "Filename must have the extension '.rmas', ex: foo.rmas"
         exit false
     end
 
@@ -75,7 +75,7 @@ end
 #
 def setup_optparse options
     OptionParser.new do |opts|
-        opts.banner = "usage: rmarie-asm [options] file.mas"
+        opts.banner = "usage: rmarie-asm [options] file.rmas"
 
         options[:output] = nil
         opts.on('-o','--output-file outfile','output file name [<filename>.rmex]') do |file|

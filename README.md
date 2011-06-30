@@ -16,7 +16,7 @@ differs slightly. Addresses can now be given as labels, hexadecimal digits
 Features
 --------
 
-* Assembler (supports .mas files)
+* Assembler (supports .rmas files)
 * Virtual Machine  (only supports .rmex files)
 
 To Do
