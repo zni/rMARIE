@@ -18,10 +18,17 @@
 
 module Rmarie
     class UInt16
+
+        # Convert to an unsigned 16-bit integer.
+        # n - signed 16-bit integer
+        #
         def self.from_signed n
             n & 0xFFFF
         end
-    
+        
+        # Convert to a signed 16-bit integer.
+        # n - unsigned 16-bit integer
+        #
         def self.to_signed n
             if n & 0x8000 == 0x8000
                 n - 0x1_0000

@@ -18,6 +18,9 @@
 
 module Rmarie
     class Memory
+        
+        # Create new memory instance.
+        #
         def initialize
             @@MEM_SIZE = 4095
             @@MEM_BLOCK_SIZE = 15

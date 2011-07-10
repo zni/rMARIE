@@ -85,14 +85,22 @@ module Rmarie
 
         private
 
+        # Retrieve the instruction bits.
+        #
         def decode_inst data
             0xF000 & data
         end
 
+        # Retrieve the address bits.
+        #
         def decode_addr data
             0x0FFF & data
         end
 
+        # Perform a jump and store, which stores the current program counter
+        # register value at the given address and starts execution at the
+        # address proceeding the storage location.
+        #
         def jns
             @cpu.mbr = @cpu.pc
             @cpu.mar = decode_addr @cpu.ir
@@ -103,24 +111,32 @@ module Rmarie
             @cpu.pc = @cpu.ac
         end
 
+        # Loads data from address to the accumulator register.
+        #
         def load
             @cpu.mar = decode_addr @cpu.ir
             @cpu.mbr = @mem.read @cpu.mar
             @cpu.ac = @cpu.mbr
         end
 
+        # Store data in the accumulator to the given address.
+        #
         def store
             @cpu.mar = decode_addr @cpu.ir
             @cpu.mbr = @cpu.ac
             @mem.write @cpu.mar, @cpu.mbr
         end
 
+        # Add value at given address to the accumulator.
+        #
         def add
             @cpu.mar = decode_addr @cpu.ir
             @cpu.mbr = @mem.read @cpu.mar
             @cpu.ac = @conv.from_signed(@conv.to_signed(@cpu.ac) + @conv.to_signed(@cpu.mbr))
         end
 
+        # Subtract value at given address from the accumulator.
+        #
         def subt
             @cpu.mar = decode_addr @cpu.ir
             @cpu.mbr = @mem.read @cpu.mar
@@ -162,6 +178,15 @@ module Rmarie
             @halted = true
         end
 
+        # Conditionally skip next instruction.
+        #
+        #   If 0x0000 is given, skip if accumulator is less than zero.
+        #   If 0x0400 is given, skip is accumulator is zero.
+        #   If 0x0800 is given, skip if accumulator is greater than zero.
+        #
+        #   If all three bits are set (0x0c00) the behavior is undefined,
+        #   so we halt.
+        #
         def skipcond
             case @cpu.ir & 0x0c00
                 when 0x0000 then @cpu.pc = @cpu.pc.next if @cpu.ac < 0
@@ -171,14 +196,21 @@ module Rmarie
             end
         end
 
+        # Jump to given address.
+        #
         def jump
             @cpu.pc = decode_addr @cpu.ir
         end
 
+        # Reset the accumulator to zero.
+        #
         def clear
             @cpu.ac = 0
         end
 
+        # Use the value at the address given as the address of the value
+        # to add to the accumulator.
+        #
         def addi
             @cpu.mar = decode_addr @cpu.ir
             @cpu.mbr = @mem.read @cpu.mar
@@ -187,6 +219,8 @@ module Rmarie
             @cpu.ac = @cpu.ac + @cpu.mbr
         end
 
+        # Use use the value at the address given as the jump address.
+        #
         def jumpi
             @cpu.mar = decode_addr @cpu.ir
             @cpu.mbr = @mem.read @cpu.mar

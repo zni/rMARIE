@@ -20,6 +20,8 @@ module Rmarie
     class CPU
         attr_accessor :ir, :pc, :ac, :mar, :mbr, :in, :out
     
+        # Create CPU instance and initialize registers to 0.
+        #
         def initialize
             @ir = 0
             @pc = 0
@@ -30,6 +32,8 @@ module Rmarie
             @out = 0
         end
 
+        # Dump registers to string for use in the final machine state dump.
+        #
         def dump
             "Registers\n" <<
             "=========\n" <<

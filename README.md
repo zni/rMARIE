@@ -17,7 +17,7 @@ Features
 --------
 
 * Assembler (supports .rmas files)
-* Virtual Machine  (only supports .rmex files)
+* Virtual Machine  (supports .rmex files)
 
 To Do
 ----
@@ -32,7 +32,7 @@ Usage
 
 To assemble an rMARIE assembly file:
 
-    rmarie-asm <file>.mas
+    rmarie-asm <file>.rmas
 
 This will produce *file.rmex*, which you can now give to the virtual machine:
 
@@ -48,8 +48,8 @@ Requirements
 ------------
 
 * Ruby (>= 1.9.0)
-* Racc
-* Rexical
+* Racc  (>= 1.4.6)
+* Rexical (>= 1.0.5)
 
 Install
 -------
